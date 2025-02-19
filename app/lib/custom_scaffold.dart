@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'screen/LoginScreen.dart';  // Ajuste conforme o caminho correto
+import 'screen/LoginScreen.dart';  // Importe a tela de login para redirecionar após o logout
 
 class CustomScaffold extends StatelessWidget {
   final String title;
   final Widget body;
   final Widget? floatingActionButton;
+  final bool showBackButton;
 
   const CustomScaffold({
     super.key,
     required this.title,
     required this.body,
     this.floatingActionButton,
+    this.showBackButton = true, // Define se a seta de voltar será mostrada
   });
 
   // Função de logout
   Future<void> logout(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');  // Remove o token armazenado
+    await prefs.setBool('isLoggedIn', false);
 
-    // Redireciona para a tela de login após o logout
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
-    );
+    // Redireciona para a tela de login e remove todas as telas do histórico
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   @override
@@ -32,6 +32,15 @@ class CustomScaffold extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(title),
+        automaticallyImplyLeading: showBackButton,  // Define se a seta será mostrada
+        leading: showBackButton
+            ? null // Se for true, usa o comportamento padrão (seta de voltar ou menu)
+            : IconButton(
+                icon: Icon(Icons.menu),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();  // Abre o menu lateral manualmente
+                },
+              ),
       ),
       drawer: Drawer(
         child: ListView(
